@@ -1,18 +1,26 @@
-# This is a sample Python script.
+import socket
+import settings
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('Stepan')
+    choice = input('Enter: ')
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind((settings.IP, settings.PORT))
+    s.listen(1)
+    conn, addr = s.accept()
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((settings.IP, settings.PORT))
+    s.sendall('Hello, world')
+    data = s.recv(1024)
+    s.close()
+    print('Received', repr(data))
+
+    while 1:
+        data = conn.recv(1024)
+        if not data:
+            break
+        conn.sendall(data)
+    conn.close()
 
 

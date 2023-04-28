@@ -1,26 +1,25 @@
+import server
+import time
 import socket
-import settings
+import keyboard
 
+# import server
 if __name__ == '__main__':
-    choice = input('Enter: ')
+    server = server.Server()
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((settings.IP, settings.PORT))
-    s.listen(1)
-    conn, addr = s.accept()
+    stop = False
+    while True:
+        server.send_broadcast()
+        time.sleep(5)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((settings.IP, settings.PORT))
-    s.sendall('Hello, world')
-    data = s.recv(1024)
-    s.close()
-    print('Received', repr(data))
-
-    while 1:
-        data = conn.recv(1024)
-        if not data:
-            break
-        conn.sendall(data)
-    conn.close()
+    # sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # UDP
+    # sock.sendto("utf-8".encode(), (settings.IP, 21313))
+    # while not stop:
+    #     if keyboard.is_pressed('down'):
+    #         server.send_packet('down')
+    #         stop = True
+    #
+    #     if keyboard.is_pressed('up'):
+    #         server.send_packet('up')
 
 

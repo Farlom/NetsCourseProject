@@ -20,7 +20,7 @@ class Pong:
     ball = Struct(random.randint(10, settings.GAME_WIDTH - 11), int(settings.GAME_HEIGHT / 2), random.randint(1, 4))
     gameover = False
 
-    def __init_socket(self, choice=2):
+    def __init_conn(self, choice=2):
         if choice == 1:
             self.is_server = True
             self.socket = Server()
@@ -60,7 +60,7 @@ class Pong:
 
     def __init__(self, choice):
 
-        self.__init_socket(choice)
+        self.__init_conn(choice)
         for i in range(settings.GAME_HEIGHT):
             for j in range(settings.GAME_WIDTH):
                 if j == 0 or j == settings.GAME_WIDTH - 1:
@@ -112,20 +112,36 @@ class Pong:
                         self.field[i][j] = 'o'
             os.system('cls')
             self.show()
-            self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')  # __ ballX __ ballY __ playerY
+
+            # def send_packet():
+            #     self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')
+            #
+            # def deserialize():
+            #     self.socket.deserialize()
+            self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')
+            # thread_send = Thread(target=send_packet)  # __ ballX __ ballY __ playerY
+            # thread_get = Thread(target=deserialize)
+            # thread_send.start()
+            # thread_get.start()
         else:
-            self.field[self.ball.y][self.ball.x] = ' '
-            self.field[self.opponent.y][self.opponent.x] = ' '
+            if self.client_socket.deserialize() == (99, 99, 99):
+                self.gameover = True
+            else:
+                self.field[self.ball.y][self.ball.x] = ' '
+                self.field[self.opponent.y][self.opponent.x] = ' '
+                self.ball.x, self.ball.y, self.opponent.y = self.client_socket.deserialize()
+                print(self.ball.x, self.ball.y, self.opponent.y)
+                self.field[self.ball.y][self.ball.x] = 'o'
+                self.field[self.opponent.y][self.opponent.x] = '|'
+                os.system('cls')
+                self.show()
+                self.client_socket.send_packet(f'9999{self.player.y:02d}')
+            # thread_deserialize = Thread(target=deserialize)
+            # thread_send = Thread(target=send_packet)
+            # thread_deserialize.start()
+            # thread_send.start()
 
-            self.ball.x, self.ball.y, self.opponent.y = self.client_socket.deserialize()
-            print(self.ball.x, self.ball.y, self.opponent.y)
-            self.field[self.ball.y][self.ball.x] = 'o'
-            self.field[self.opponent.y][self.opponent.x] = '|'
-            os.system('cls')
-            self.show()
-
-    def update_ball(self):
-        ...
+            # Thread(target=self.client_socket.send_packet(f'#1#2{self.player.y:02d}')).start()
 
     def logic(self):
         if self.ball.y == 1 and self.ball.dir == 1:
@@ -161,4 +177,6 @@ class Pong:
             time.sleep(0.25)
             # if not self.is_server:
                 # print(self.socket.deserialize())
+        if self.is_server and self.gameover:
+            self.socket.send_packet('999999')
         return 0

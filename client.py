@@ -12,6 +12,11 @@ class Client:
         self.socket = sock
         self.socket.bind(('', settings.PORT))
 
+    def send_packet(self, message, port=settings.SERVER_PORT):
+        destination_address = (self.server_ip, port)
+        sending_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+        sending_socket.sendto(message.encode(), destination_address)
+
     def connect_to_server(self):
         data = 0
         while data == 0:
@@ -37,29 +42,11 @@ class Client:
             return True
 
     def deserialize(self):
+        # listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # listening_socket.bind(('', settings.CLIENT_PORT))
         data = 0
         while data == 0:
             m = self.socket.recvfrom(6)
             data = m[0].decode()
         return int(data[0:2]), int(data[2:4]), int(data[4:6])
-# s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# s.bind(('', settings.PORT))
-# data = 0
-# while data == 0:
-#     m=s.recvfrom(4096)
-#     data = m[0].decode()
-#     # print('len(m)='+str(len(m)))
-#     # print('len(m[0])='+str(len(m[0])))
-#     # print(m[0])
-#     #
-#     # print('len(m[1])='+str(len(m[1])))
-#     # print(m[1])
-#
-# print(data)
-# s.sendto('Hello'.encode(), (data, 21313))
 
-# raw_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-# # raw_sock.connect(('192.168.171.11', settings.PORT))
-# raw_sock.sendto('Hello'.encode(), ('192.168.171.11', 21312))
-# raw_sock.close()
-# print(123)

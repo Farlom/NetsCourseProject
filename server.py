@@ -18,7 +18,7 @@ class Server:
         Server.server_socket.sendto(settings.IP.encode(), destination_address)
 
     def send_packet(self, message, port=settings.CLIENT_PORT):
-        destination_address = ('<broadcast>', port)
+        destination_address = (self.client_ip, port)
         Server.server_socket.sendto(message.encode(), destination_address)
 
     def get_client_ip(self):
@@ -38,3 +38,12 @@ class Server:
 
     def connection_ack(self) -> bool:
         ...
+
+    def deserialize(self):
+        listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        listening_socket.bind(('', settings.CLIENT_PORT))
+        data = 0
+        while data == 0:
+            m = listening_socket.recvfrom(6)
+            data = m[0].decode()
+        return int(data[0:2]), int(data[2:4]), int(data[4:6])

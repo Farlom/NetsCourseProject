@@ -19,7 +19,7 @@ class Server:
 
     def send_packet(self, message, port=settings.CLIENT_PORT):
         destination_address = (self.client_ip, port)
-        Server.server_socket.sendto(message.encode(), destination_address)
+        self.server_socket.sendto(message.encode(), destination_address)
 
     def get_client_ip(self):
         listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -30,20 +30,31 @@ class Server:
             m, addr = listening_socket.recvfrom(1024)
             data = addr[0]
         self.client_ip = data
+
+        listening_socket.close()
         # self.socket.bind((self.client_ip, settings.CLIENT_PORT))
 
     def handshake_with_client(self):
         destination_address = (self.client_ip, settings.CLIENT_PORT)
         self.server_socket.sendto(f'Hello, I`m using port {settings.CLIENT_PORT}. Server'.encode(), destination_address)
 
-    def connection_ack(self) -> bool:
-        ...
-
-    def deserialize(self):
+    def packet_ack(self) -> bool:
         listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        listening_socket.bind(('', settings.CLIENT_PORT))
+        listening_socket.bind(('', settings.SERVER_PORT))
+
         data = 0
         while data == 0:
-            m = listening_socket.recvfrom(6)
+            m, addr = listening_socket.recvfrom(1024)
+        listening_socket.close()
+        return True
+
+    def deserialize(self):
+        listening_sockets = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # listening_sockets.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+        listening_sockets.bind(('', settings.SERVER_PORT))
+        data = 0
+        while data == 0:
+            m = listening_sockets.recvfrom(6)
             data = m[0].decode()
-        return int(data[0:2]), int(data[2:4]), int(data[4:6])
+        # return int(data[4:6])

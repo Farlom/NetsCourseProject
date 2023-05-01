@@ -42,6 +42,7 @@ class Client:
             return True
 
     def deserialize(self):
+        # self.socket.bind(('', settings.CLIENT_PORT))
         # listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # listening_socket.bind(('', settings.CLIENT_PORT))
         data = 0

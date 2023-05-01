@@ -7,7 +7,7 @@ import keyboard
 from server import Server
 from client import Client
 from threading import Thread
-
+import socket
 
 class Pong:
 
@@ -15,8 +15,7 @@ class Pong:
     for i in range(settings.GAME_HEIGHT):
         field[i] = [' '] * settings.GAME_WIDTH
 
-    player = Struct(4, int(settings.GAME_HEIGHT / 2))
-    opponent = Struct(settings.GAME_WIDTH - 5, int(settings.GAME_HEIGHT / 2))
+
     ball = Struct(random.randint(10, settings.GAME_WIDTH - 11), int(settings.GAME_HEIGHT / 2), random.randint(1, 4))
     gameover = False
 
@@ -25,6 +24,9 @@ class Pong:
             self.is_server = True
             self.socket = Server()
             self.connection = False
+
+            self.player = Struct(4, int(settings.GAME_HEIGHT / 2))
+            self.opponent = Struct(settings.GAME_WIDTH - 5, int(settings.GAME_HEIGHT / 2))
 
             def send_broadcast():
 
@@ -52,6 +54,10 @@ class Pong:
             self.socket.handshake_with_client()
         elif choice == 2:
             self.is_server = False
+
+            self.opponent = Struct(4, int(settings.GAME_HEIGHT / 2))
+            self.player = Struct(settings.GAME_WIDTH - 5, int(settings.GAME_HEIGHT / 2))
+
             self.client_socket = Client()
             self.client_socket.connect_to_server()
             print(self.client_socket.server_ip)
@@ -113,12 +119,16 @@ class Pong:
             os.system('cls')
             self.show()
 
-            # def send_packet():
-            #     self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')
-            #
-            # def deserialize():
-            #     self.socket.deserialize()
-            self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')
+            def send_packet():
+                self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')
+
+
+            def deserialize():
+                print(self.socket.deserialize())
+            self.socket.send_packet(f'{self.ball.x :02d}'
+                                    f'{self.ball.y:02d}'
+                                    f'{self.player.y:02d}')
+            # print(self.socket.deserialize())
             # thread_send = Thread(target=send_packet)  # __ ballX __ ballY __ playerY
             # thread_get = Thread(target=deserialize)
             # thread_send.start()
@@ -135,7 +145,8 @@ class Pong:
                 self.field[self.opponent.y][self.opponent.x] = '|'
                 os.system('cls')
                 self.show()
-                self.client_socket.send_packet(f'9999{self.player.y:02d}')
+                # self.client_socket.send_packet(f'0000{self.player.y:02d}')
+
             # thread_deserialize = Thread(target=deserialize)
             # thread_send = Thread(target=send_packet)
             # thread_deserialize.start()
@@ -164,11 +175,13 @@ class Pong:
 
     def movement(self):
         if keyboard.is_pressed('s'):
-            self.field[self.player.y][self.player.x] = ' '
-            self.player.y += 1
+            if self.player.y < settings.GAME_HEIGHT - 2:
+                self.field[self.player.y][self.player.x] = ' '
+                self.player.y += 1
         elif keyboard.is_pressed('w'):
-            self.field[self.player.y][self.player.x] = ' '
-            self.player.y -= 1
+            if 1 < self.player.y:
+                self.field[self.player.y][self.player.x] = ' '
+                self.player.y -= 1
 
     def start(self):
         while not self.gameover:

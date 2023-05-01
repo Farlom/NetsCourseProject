@@ -32,7 +32,9 @@ def create_game():
         lobby.after(5000, send_broadcast)
 
     send_broadcast()
-
+    print(server.get_client_ip())
+    # server.get_client_ip()
+    # print(server.client_ip)
 
 def join():
     client = Client()
@@ -40,9 +42,9 @@ def join():
     welcome_window.destroy()
     lobby.title('Подключение...')
     lobby.geometry('800x600')
-    client.get_server_ip()
+    client.connect_to_server()
     client.handshake_with_server()
-    print(client.get_server_ip())
+    # print(client.get_server_ip())
 
 
 welcome_window = Tk()

@@ -11,8 +11,12 @@ if __name__ == '__main__':
     # server.handshake_with_client()
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  # UDP
+    sock.bind(('', 21312))
+    # sock.sendto('123'.encode(), ('192.168.171.7', 21313))
 
-    sock.sendto('123'.encode(), ('192.168.171.7', 21313))
+    while True:
+        data, addr = sock.recvfrom(1024)  # buffer size is 1024 bytes
+        print(addr[0])
     # stop = False
     # while True:
     #     server.send_broadcast()

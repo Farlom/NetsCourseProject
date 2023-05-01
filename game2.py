@@ -1,44 +1,33 @@
-import pygame
-from settings import *
-import server
+import settings
+from server import Server
+from client import Client
 import time
-import random
+from threading import Thread
+choice = int(input("Клиент = 1, Сервер = 2: "))
 
-FPS = 30
+if choice == 1:
+    client = Client()
+    client.connect_to_server()
+    print(client.server_ip)
+    client.handshake_with_server()
 
-# Задаем цвета
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
+elif choice == 2:
+    server = Server()
 
-# Создаем игру и окно
-pygame.init()
-screen = pygame.display.set_mode((GAME_WIDTH, GAME_HEIGHT))
-pygame.display.set_caption("ATARI PING PONG")
-clock = pygame.time.Clock()
+    def send_broadcast():
+        while True:
+            server.send_broadcast()
+            time.sleep(5)
 
-server = server.Server()
-# Цикл игры
-running = True
-while running:
-    # Держим цикл на правильной скорости
-    clock.tick(FPS)
-    # Ввод процесса (события)
-    for event in pygame.event.get():
-        # check for closing window
-        if event.type == pygame.QUIT:
-            running = False
+    def get_client_ip():
+        while not server.get_client_ip():
+            server.get_client_ip()
+        print(server.client_ip)
 
-    screen.fill((255, 255, 255))
+    thread_broad = Thread(target=send_broadcast)
+    # thread_client = Thread(target=get_client_ip)
+    thread_broad.start()
+    server.get_client_ip()
+    # print(server.client_ip)
+    # thread_client.start()
 
-    server.send_broadcast()
-    pygame.time.wait(5000)
-
-    # Рендеринг
-
-    # После отрисовки всего, переворачиваем экран
-    pygame.display.flip()
-
-pygame.quit()

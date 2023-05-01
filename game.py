@@ -20,23 +20,23 @@ class Pong:
     ball = Struct(random.randint(10, settings.GAME_WIDTH - 11), int(settings.GAME_HEIGHT / 2), random.randint(1, 4))
     gameover = False
 
-    def __init__(self, choice):
+    def __init_socket(self, choice=2):
         if choice == 1:
             self.is_server = True
-            self.server = Server()
+            self.socket = Server()
             self.connection = False
 
             def send_broadcast():
 
-                while self.server.client_ip is None:
-                    self.server.send_broadcast()
+                while self.socket.client_ip is None:
+                    self.socket.send_broadcast()
                     time.sleep(5)
                 self.connection = True
                 print('Подключение установлено')
 
             def get_client_ip():
-                self.server.get_client_ip()
-                print(self.server.client_ip)
+                self.socket.get_client_ip()
+                print(self.socket.client_ip)
 
             thread_broad = Thread(target=send_broadcast)
             thread_client = Thread(target=get_client_ip)
@@ -49,17 +49,18 @@ class Pong:
                 else:
                     break
 
-            self.server.handshake_with_client()
+            self.socket.handshake_with_client()
         elif choice == 2:
             self.is_server = False
-            self.client = Client()
-            self.client.connect_to_server()
-            print(self.client.server_ip)
+            self.client_socket = Client()
+            self.client_socket.connect_to_server()
+            print(self.client_socket.server_ip)
+            self.client_socket.handshake_with_server()
+            print(self.client_socket.connection_ack())
 
-            self.client.handshake_with_server()
+    def __init__(self, choice):
 
-            print(self.client.connection_ack())
-
+        self.__init_socket(choice)
         for i in range(settings.GAME_HEIGHT):
             for j in range(settings.GAME_WIDTH):
                 if j == 0 or j == settings.GAME_WIDTH - 1:
@@ -82,35 +83,46 @@ class Pong:
             print()
 
     def update(self):
-        self.logic()
-        self.field[self.ball.y][self.ball.x] = ' '
+        if self.is_server:
+            self.logic()
+            self.field[self.ball.y][self.ball.x] = ' '
 
-        if self.ball.dir == 1:
-            self.ball.x -= 1
-            self.ball.y -= 1
-        elif self.ball.dir == 2:
-            self.ball.x += 1
-            self.ball.y -= 1
-        elif self.ball.dir == 3:
-            self.ball.x += 1
-            self.ball.y += 1
-        elif self.ball.dir == 4:
-            self.ball.x -= 1
-            self.ball.y += 1
+            if self.ball.dir == 1:
+                self.ball.x -= 1
+                self.ball.y -= 1
+            elif self.ball.dir == 2:
+                self.ball.x += 1
+                self.ball.y -= 1
+            elif self.ball.dir == 3:
+                self.ball.x += 1
+                self.ball.y += 1
+            elif self.ball.dir == 4:
+                self.ball.x -= 1
+                self.ball.y += 1
 
-        for i in range(settings.GAME_HEIGHT):
-            for j in range(settings.GAME_WIDTH):
+            for i in range(settings.GAME_HEIGHT):
+                for j in range(settings.GAME_WIDTH):
 
-                if i == self.player.y and j == self.player.x:
-                    self.field[i][j] = '|'
-                if i == self.opponent.y and j == self.opponent.x:
-                    self.field[i][j] = '|'
+                    if i == self.player.y and j == self.player.x:
+                        self.field[i][j] = '|'
+                    if i == self.opponent.y and j == self.opponent.x:
+                        self.field[i][j] = '|'
 
-                if i == self.ball.y and j == self.ball.x:
-                    self.field[i][j] = 'o'
-        os.system('cls')
-        self.show()
-        self.server.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')  # __ ballX __ ballY __ playerY
+                    if i == self.ball.y and j == self.ball.x:
+                        self.field[i][j] = 'o'
+            os.system('cls')
+            self.show()
+            self.socket.send_packet(f'{self.ball.x:02d}{self.ball.y:02d}{self.player.y:02d}')  # __ ballX __ ballY __ playerY
+        else:
+            self.field[self.ball.y][self.ball.x] = ' '
+            self.field[self.opponent.y][self.opponent.x] = ' '
+
+            self.ball.x, self.ball.y, self.opponent.y = self.client_socket.deserialize()
+            print(self.ball.x, self.ball.y, self.opponent.y)
+            self.field[self.ball.y][self.ball.x] = 'o'
+            self.field[self.opponent.y][self.opponent.x] = '|'
+            os.system('cls')
+            self.show()
 
     def update_ball(self):
         ...
@@ -142,10 +154,11 @@ class Pong:
             self.field[self.player.y][self.player.x] = ' '
             self.player.y -= 1
 
-
-
     def start(self):
         while not self.gameover:
             self.update()
             self.movement()
             time.sleep(0.25)
+            # if not self.is_server:
+                # print(self.socket.deserialize())
+        return 0

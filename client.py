@@ -33,9 +33,15 @@ class Client:
             m, addr = self.socket.recvfrom(35)
             data = m.decode()
         if addr[0] == self.server_ip:
+            # self.socket.bind(('', settings.CLIENT_PORT))
             return True
 
-
+    def deserialize(self):
+        data = 0
+        while data == 0:
+            m = self.socket.recvfrom(6)
+            data = m[0].decode()
+        return int(data[0:2]), int(data[2:4]), int(data[4:6])
 # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # s.bind(('', settings.PORT))
 # data = 0

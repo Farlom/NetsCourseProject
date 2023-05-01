@@ -17,8 +17,8 @@ class Server:
         destination_address = ('<broadcast>', settings.PORT)
         Server.server_socket.sendto(settings.IP.encode(), destination_address)
 
-    def send_packet(self, message):
-        destination_address = ('<broadcast>', settings.PORT)
+    def send_packet(self, message, port=settings.CLIENT_PORT):
+        destination_address = ('<broadcast>', port)
         Server.server_socket.sendto(message.encode(), destination_address)
 
     def get_client_ip(self):

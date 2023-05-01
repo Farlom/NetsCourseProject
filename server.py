@@ -42,8 +42,8 @@ class Server:
         # self.socket.bind(('', settings.SERVER_PORT))
 
     def handshake_with_client(self):
-        destination_address = ('<broadcast>', settings.CLIENT_PORT)
-        self.server_socket.sendto(f'Hello, I`m using port {settings.CLIENT_PORT_PORT}. Server'.encode(), destination_address)
+        destination_address = (self.client_ip, settings.CLIENT_PORT)
+        self.server_socket.sendto(f'Hello, I`m using port {settings.CLIENT_PORT}. Server'.encode(), destination_address)
 
     def connection_ack(self) -> bool:
         ...

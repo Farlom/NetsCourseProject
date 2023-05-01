@@ -18,11 +18,14 @@ if choice == 1:
 
 elif choice == 2:
     server = Server()
+    connection = False
 
     def send_broadcast():
+        global connection
         while server.client_ip is None:
             server.send_broadcast()
             time.sleep(5)
+        connection = True
         print('Подключение установлено')
 
     def get_client_ip():
@@ -34,5 +37,12 @@ elif choice == 2:
     thread_broad.start()
     thread_client.start()
 
+    while True:
+        if thread_broad.is_alive():
+            time.sleep(1)
+        else:
+            break
+
+    server.handshake_with_client()
 
 

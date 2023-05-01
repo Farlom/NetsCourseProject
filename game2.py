@@ -9,7 +9,9 @@ if choice == 1:
     client = Client()
     client.connect_to_server()
     print(client.server_ip)
+
     client.handshake_with_server()
+
 
 elif choice == 2:
     server = Server()

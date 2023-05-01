@@ -22,14 +22,15 @@ class Server:
         Server.server_socket.sendto(message.encode(), destination_address)
 
     def get_client_ip(self):
-        self.server_socket.bind(('', settings.SERVER_PORT))
+        listening_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        listening_socket.bind(('', settings.SERVER_PORT))
 
         data = 0
         while data == 0:
-            m, addr = self.server_socket.recvfrom(1024)
+            m, addr = listening_socket.recvfrom(1024)
             data = addr[0]
         self.client_ip = data
-        self.socket.bind((self.client_ip, settings.CLIENT_PORT))
+        # self.socket.bind((self.client_ip, settings.CLIENT_PORT))
 
     def connect_to_server(self):
         data = 0

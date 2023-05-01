@@ -15,6 +15,8 @@ if choice == 1:
 
     client.handshake_with_server()
 
+    print(client.connection_ack())
+
 
 elif choice == 2:
     server = Server()

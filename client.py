@@ -19,16 +19,23 @@ class Client:
             data = m[0].decode()
         self.server_ip = data
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # self.socket.bind(('', settings.SERVER_PORT))
+        self.socket.bind(('', settings.CLIENT_PORT))
 
     def handshake_with_server(self):
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         destination_address = (self.server_ip, settings.SERVER_PORT)
         self.socket.sendto(f'Hello, I`m using port {settings.SERVER_PORT}. Client'.encode(), destination_address)
         # self.socket.sendto('123'.encode(), destination_address)
 
-    def packet_ack(self) -> bool:
-        ...
+    def connection_ack(self) -> bool:
+        data = 0
+        while data == 0:
+            m, addr = self.socket.recvfrom(35)
+            data = m.decode()
+        if addr[0] == self.server_ip:
+            return True
+
+
 # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # s.bind(('', settings.PORT))
 # data = 0

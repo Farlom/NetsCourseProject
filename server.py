@@ -32,15 +32,6 @@ class Server:
         self.client_ip = data
         # self.socket.bind((self.client_ip, settings.CLIENT_PORT))
 
-    def connect_to_server(self):
-        data = 0
-        while data == 0:
-            m = self.server_socket.recvfrom(1024)
-            data = m[0].decode()
-        # self.client_ip = data
-        # self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        # self.socket.bind(('', settings.SERVER_PORT))
-
     def handshake_with_client(self):
         destination_address = (self.client_ip, settings.CLIENT_PORT)
         self.server_socket.sendto(f'Hello, I`m using port {settings.CLIENT_PORT}. Server'.encode(), destination_address)

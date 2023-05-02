@@ -7,14 +7,15 @@ import keyboard
 from server import Server
 from client import Client
 from threading import Thread
+from msvcrt import getch
 import socket
+
 
 class Pong:
 
     field = [' '] * settings.GAME_HEIGHT
     for i in range(settings.GAME_HEIGHT):
         field[i] = [' '] * settings.GAME_WIDTH
-
 
     ball = Struct(random.randint(10, settings.GAME_WIDTH - 11), int(settings.GAME_HEIGHT / 2), random.randint(1, 4))
     gameover = False
@@ -83,6 +84,7 @@ class Pong:
                     self.field[i][j] = 'o'
 
     def show(self):
+        os.system('cls')
         for i in range(settings.GAME_HEIGHT):
             for j in range(settings.GAME_WIDTH):
                 print(self.field[i][j], end='')
@@ -90,28 +92,13 @@ class Pong:
 
     def update(self):
         if self.is_server:
-            self.logic()
-            self.field[self.ball.y][self.ball.x] = ' '
 
-            # start Логика полета мяча
-            if self.ball.dir == 1:
-                self.ball.x -= 1
-                self.ball.y -= 1
-            elif self.ball.dir == 2:
-                self.ball.x += 1
-                self.ball.y -= 1
-            elif self.ball.dir == 3:
-                self.ball.x += 1
-                self.ball.y += 1
-            elif self.ball.dir == 4:
-                self.ball.x -= 1
-                self.ball.y += 1
-            # end
-
-            self.field[self.ball.y][self.ball.x] = 'o'
-
-            self.field[self.player.y][self.player.x] = '|'
-
+            self.__update_ball()
+            # self.movement()
+            # thread_ball_update = Thread(target=self.__update_ball)
+            thread_movement = Thread(target=self.movement)
+            # thread_ball_update.start()
+            thread_movement.start()
             self.socket.send_packet(f'{self.ball.x :02d}'
                                     f'{self.ball.y:02d}'
                                     f'{self.player.y:02d}0')
@@ -120,7 +107,6 @@ class Pong:
             self.opponent.y = self.socket.deserialize()
             self.field[self.opponent.y][self.opponent.x] = '|'
 
-            os.system('cls')
             self.show()
 
         else:
@@ -131,9 +117,29 @@ class Pong:
             if not self.gameover:
                 self.field[self.ball.y][self.ball.x] = 'o'
                 self.field[self.opponent.y][self.opponent.x] = '|'
-                os.system('cls')
+
                 self.show()
                 self.client_socket.send_packet(f'0000{self.player.y:02d}')
+
+    def __update_ball(self):
+        self.logic()
+        self.field[self.ball.y][self.ball.x] = ' '
+
+        if self.ball.dir == 1:
+            self.ball.x -= 1
+            self.ball.y -= 1
+        elif self.ball.dir == 2:
+            self.ball.x += 1
+            self.ball.y -= 1
+        elif self.ball.dir == 3:
+            self.ball.x += 1
+            self.ball.y += 1
+        elif self.ball.dir == 4:
+            self.ball.x -= 1
+            self.ball.y += 1
+
+        self.field[self.ball.y][self.ball.x] = 'o'
+        time.sleep(1)
 
     def logic(self):
         if self.ball.y == 1 and self.ball.dir == 1:
@@ -155,20 +161,36 @@ class Pong:
             self.gameover = True
 
     def movement(self):
-        if keyboard.is_pressed('s'):
-            if self.player.y < settings.GAME_HEIGHT - 2:
-                self.field[self.player.y][self.player.x] = ' '
-                self.player.y += 1
-        elif keyboard.is_pressed('w'):
-            if 1 < self.player.y:
-                self.field[self.player.y][self.player.x] = ' '
-                self.player.y -= 1
+        while not self.gameover:
+            key = getch().decode()
+            if key == 's':
+                if self.player.y < settings.GAME_HEIGHT - 2:
+                    self.field[self.player.y][self.player.x] = ' '
+                    self.player.y += 1
+                    self.field[self.player.y][self.player.x] = '|'
+                    self.show()
+            if key == 'w':
+                if self.player.y < settings.GAME_HEIGHT - 2:
+                    self.field[self.player.y][self.player.x] = ' '
+                    self.player.y -= 1
+                    self.field[self.player.y][self.player.x] = '|'
+                    self.show()
+            # if keyboard.is_pressed('s'):
+            #     if self.player.y < settings.GAME_HEIGHT - 2:
+            #         self.field[self.player.y][self.player.x] = ' '
+            #         self.player.y += 1
+            #         self.field[self.player.y][self.player.x] = '|'
+            # elif keyboard.is_pressed('w'):
+            #     if 1 < self.player.y:
+            #         self.field[self.player.y][self.player.x] = ' '
+            #         self.player.y -= 1
+            #         self.field[self.player.y][self.player.x] = '|'
 
     def start(self):
         while not self.gameover:
             self.update()
-            self.movement()
-            time.sleep(0.25)
+            # self.movement()
+            # time.sleep(0.25)
             # if not self.is_server:
                 # print(self.socket.deserialize())
         if self.is_server and self.gameover:

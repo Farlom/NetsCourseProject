@@ -68,6 +68,14 @@ class Pong:
     def __init__(self, choice):
 
         self.__init_conn(choice)
+
+        if choice == 1:
+            ch = input('Тестовый режим (1=True; 2=False): ')
+            if ch == '1':
+                self.MODE = True
+            else:
+                self.MODE = False
+            print(self.MODE)
         for i in range(settings.GAME_HEIGHT):
             for j in range(settings.GAME_WIDTH):
                 if j == 0 or j == settings.GAME_WIDTH - 1:
@@ -94,11 +102,6 @@ class Pong:
         if self.is_server:
 
             self.__update_ball()
-            # self.movement()
-            thread_ball_update = Thread(target=self.__update_ball)
-            thread_movement = Thread(target=self.movement)
-            # thread_ball_update.start()
-            # thread_movement.start()
             self.socket.send_packet(f'{self.ball.x :02d}'
                                     f'{self.ball.y:02d}'
                                     f'{self.player.y:02d}0')
@@ -113,11 +116,9 @@ class Pong:
             self.field[self.ball.y][self.ball.x] = ' '
             self.field[self.opponent.y][self.opponent.x] = ' '
             self.ball.x, self.ball.y, self.opponent.y, self.gameover = self.client_socket.deserialize()
-            print(self.ball.x, self.ball.y, self.opponent.y, self.gameover)
             if not self.gameover:
                 self.field[self.ball.y][self.ball.x] = 'o'
                 self.field[self.opponent.y][self.opponent.x] = '|'
-
                 self.show()
                 self.client_socket.send_packet(f'0000{self.player.y:02d}')
 
@@ -157,8 +158,18 @@ class Pong:
             elif self.ball.dir == 4:
                 self.ball.dir = 3
 
-        if self.ball.x == 2 or self.ball.x == settings.GAME_WIDTH - 2:
-            self.gameover = True
+        if self.MODE:
+            if self.ball.x == 1 and self.ball.dir == 1:
+                self.ball.dir = 2
+            elif self.ball.x == 1 and self.ball.dir == 4:
+                self.ball.dir = 3
+            elif self.ball.x == settings.GAME_WIDTH - 2 and self.ball.dir == 2:
+                self.ball.dir = 1
+            elif self.ball.x == settings.GAME_WIDTH - 2 and self.ball.dir == 3:
+                self.ball.dir = 4
+        else:
+            if self.ball.x == 1 or self.ball.x == settings.GAME_WIDTH - 2:
+                self.gameover = True
 
     def movement(self):
         while True:
@@ -173,7 +184,7 @@ class Pong:
                         self.field[self.player.y][self.player.x] = '|'
                         self.show()
                 if key == 'w':
-                    if self.player.y < settings.GAME_HEIGHT - 2:
+                    if 1 < self.player.y:
                         self.field[self.player.y][self.player.x] = ' '
                         self.player.y -= 1
                         self.field[self.player.y][self.player.x] = '|'

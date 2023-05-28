@@ -62,8 +62,19 @@ class Server:
         sock.bind(('', settings.SERVER_PORT))
         data = 0
         while data == 0:
-            m = sock.recvfrom(6)
+            m = sock.recvfrom(7)
             data = m[0].decode()
 
         sock.close()
         return int(data[4:6])
+
+    def recieve_packet(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(('', settings.SERVER_PORT))
+        data = 0
+        while data == 0:
+            m = sock.recvfrom(7)
+            data = m[0].decode()
+
+        sock.close()
+        return data

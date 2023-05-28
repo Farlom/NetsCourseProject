@@ -6,6 +6,7 @@ import os
 # import keyboard
 from server import Server
 from client import Client
+import protocol
 from threading import Thread
 from msvcrt import getch
 # import socket
@@ -39,7 +40,7 @@ class Pong:
 
             def get_client_ip():
                 self.socket.get_client_ip()
-                print(self.socket.client_ip)
+                print(f'Client IP: {self.socket.client_ip}')
 
             thread_broad = Thread(target=send_broadcast)
             thread_client = Thread(target=get_client_ip)
@@ -61,9 +62,11 @@ class Pong:
 
             self.client_socket = Client()
             self.client_socket.connect_to_server()
-            print(self.client_socket.server_ip)
+            print(f'Server IP: {self.client_socket.server_ip}')
             self.client_socket.handshake_with_server()
-            print(self.client_socket.connection_ack())
+
+            if self.client_socket.connection_ack():
+                print('Подключение с сервером установлено')
 
     def __init__(self, choice):
 
@@ -102,12 +105,17 @@ class Pong:
         if self.is_server:
 
             self.__update_ball()
-            self.socket.send_packet(f'{self.ball.x :02d}'
-                                    f'{self.ball.y:02d}'
-                                    f'{self.player.y:02d}0')
+
+            # self.socket.send_packet(f'{self.ball.x :02d}'
+            #                         f'{self.ball.y:02d}'
+            #                         f'{self.player.y:02d}0')
+            self.socket.send_packet(protocol.serialize(self.is_server, (self.ball.x, self.ball.y, self.player.y)))
 
             self.field[self.opponent.y][self.opponent.x] = ' '
-            self.opponent.y = self.socket.deserialize()
+
+            # self.opponent.y = self.socket.deserialize()
+            self.opponent.y = protocol.deserialize(self.is_server, self.socket.recieve_packet())
+
             self.field[self.opponent.y][self.opponent.x] = '|'
 
             self.show()
@@ -115,17 +123,21 @@ class Pong:
         else:
             self.field[self.ball.y][self.ball.x] = ' '
             self.field[self.opponent.y][self.opponent.x] = ' '
-            self.ball.x, self.ball.y, self.opponent.y, self.gameover = self.client_socket.deserialize()
+            # self.ball.x, self.ball.y, self.opponent.y, self.gameover = self.client_socket.deserialize()
+            self.ball.x, self.ball.y, self.opponent.y, self.gameover = protocol.deserialize(self.is_server, self.client_socket.recieve_packet())
+
             if not self.gameover:
                 self.field[self.ball.y][self.ball.x] = 'o'
                 self.field[self.opponent.y][self.opponent.x] = '|'
                 self.show()
-                self.client_socket.send_packet(f'0000{self.player.y:02d}')
+                # self.client_socket.send_packet(f'0000{self.player.y:02d}0')
+                self.client_socket.send_packet(protocol.serialize(self.is_server, (self.player.y, 0)))
 
     def __update_ball(self):
         self.logic()
         self.field[self.ball.y][self.ball.x] = ' '
 
+        # изменение координат мяча в зависимости от направления
         if self.ball.dir == 1:
             self.ball.x -= 1
             self.ball.y -= 1
@@ -143,6 +155,8 @@ class Pong:
         time.sleep(0.25)
 
     def logic(self):
+
+        # логика коллизий мяча со стенками
         if self.ball.y == 1 and self.ball.dir == 1:
             self.ball.dir = 4
         elif self.ball.y == 1 and self.ball.dir == 2:
@@ -152,12 +166,21 @@ class Pong:
         elif self.ball.y == settings.GAME_HEIGHT-2 and self.ball.dir == 4:
             self.ball.dir = 1
 
+        # логика коллизий мяча с игроком
         if self.ball.x == self.player.x+1 and self.player.y + 1 >= self.ball.y > self.player.y - 1:
             if self.ball.dir == 1:
                 self.ball.dir = 2
             elif self.ball.dir == 4:
                 self.ball.dir = 3
 
+        # логика коллизий мяча с оппонентом
+        if self.ball.x == self.opponent.x - 1 and self.opponent.y + 1 >= self.ball.y > self.opponent.y - 1:
+            if self.ball.dir == 2:
+                self.ball.dir = 1
+            elif self.ball.dir == 3:
+                self.ball.dir = 4
+
+        # режим игры
         if self.MODE:
             if self.ball.x == 1 and self.ball.dir == 1:
                 self.ball.dir = 2
@@ -202,5 +225,9 @@ class Pong:
                 # print(self.socket.deserialize())
         print(123)
         if self.is_server and self.gameover:
-            self.socket.send_packet(f'{random.randint(0, 999999):02d}1')
+            # self.socket.send_packet(f'{random.randint(0, 999999):02d}1')
+            self.socket.send_packet(protocol.serialize(self.is_server, (random.randint(0, 99),
+                                                                        random.randint(0, 99),
+                                                                        random.randint(0, 99),
+                                                                        1)))
         return 0

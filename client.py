@@ -3,15 +3,7 @@ import settings
 
 
 class Client:
-    # socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_ip = None
-
-    # socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    def __init__(self, sock=socket.socket(socket.AF_INET, socket.SOCK_DGRAM)):
-        # self.socket = sock
-        # self.socket.bind(('', settings.PORT))
-        ...
 
     def send_packet(self, message, port=settings.SERVER_PORT):
         destination_address = (self.server_ip, port)
@@ -46,17 +38,6 @@ class Client:
         if addr[0] == self.server_ip:
             sock.close()
             return True
-
-    # def deserialize(self):
-    #     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    #     sock.bind(('', settings.CLIENT_PORT))
-    #
-    #     data = 0
-    #     while data == 0:
-    #         m = sock.recvfrom(7)
-    #         data = m[0].decode()
-    #     sock.close()
-    #     return int(data[0:2]), int(data[2:4]), int(data[4:6]), bool(int(data[6:7]))
 
     def recieve_packet(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

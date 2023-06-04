@@ -9,7 +9,6 @@ from client import Client
 import protocol
 from threading import Thread
 from msvcrt import getch
-# import socket
 
 
 class Pong:
@@ -106,14 +105,9 @@ class Pong:
 
             self.__update_ball()
 
-            # self.socket.send_packet(f'{self.ball.x :02d}'
-            #                         f'{self.ball.y:02d}'
-            #                         f'{self.player.y:02d}0')
             self.socket.send_packet(protocol.serialize(self.is_server, (self.ball.x, self.ball.y, self.player.y)))
 
             self.field[self.opponent.y][self.opponent.x] = ' '
-
-            # self.opponent.y = self.socket.deserialize()
             self.opponent.y = protocol.deserialize(self.is_server, self.socket.recieve_packet())
 
             self.field[self.opponent.y][self.opponent.x] = '|'
@@ -123,14 +117,12 @@ class Pong:
         else:
             self.field[self.ball.y][self.ball.x] = ' '
             self.field[self.opponent.y][self.opponent.x] = ' '
-            # self.ball.x, self.ball.y, self.opponent.y, self.gameover = self.client_socket.deserialize()
             self.ball.x, self.ball.y, self.opponent.y, self.gameover = protocol.deserialize(self.is_server, self.client_socket.recieve_packet())
 
             if not self.gameover:
                 self.field[self.ball.y][self.ball.x] = 'o'
                 self.field[self.opponent.y][self.opponent.x] = '|'
                 self.show()
-                # self.client_socket.send_packet(f'0000{self.player.y:02d}0')
                 self.client_socket.send_packet(protocol.serialize(self.is_server, (self.player.y, 0)))
 
     def __update_ball(self):
@@ -219,13 +211,8 @@ class Pong:
 
         while not self.gameover:
             self.update()
-            # self.movement()
-            # time.sleep(0.25)
-            # if not self.is_server:
-                # print(self.socket.deserialize())
-        print(123)
+        print('GAMEOVER')
         if self.is_server and self.gameover:
-            # self.socket.send_packet(f'{random.randint(0, 999999):02d}1')
             self.socket.send_packet(protocol.serialize(self.is_server, (random.randint(0, 99),
                                                                         random.randint(0, 99),
                                                                         random.randint(0, 99),
